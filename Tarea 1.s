@@ -24,10 +24,11 @@
 			;		Modulo is used as N % D = M
 			;		R8: Primal analysis will be applied to this number
 			;		R9:
-			;			Divisible by 2: Flag that indicates if number is odd
-			;			Other cases: N
+			;		Divisible by 2: Flag that indicates if number is odd
+			;		Other cases: N
 			;		R10: D
-			;		R11: M
+			;		R11: M and primality test result
+			;		R12: Number retrieving address
 			;		===============================================================================
 			
 			;		================================================================================
@@ -85,11 +86,15 @@ RESPONSE
 			;		===============================================================================
 			
 			;		===============================================================================
-			;		PRIME NUMBER CALCULATION
+			;		PRIMALITY TEST
 			;		===============================================================================
+			;		-------------------------------- INITIALIZATIONS -------------------------------
+			MOV		R3, #0x1200				; Number retrieving address initialization
+			MOV		R4, #20					; Counter initialization
+			MOV		R12, #0x1400				; Number saving address initialization
 PRIME_CALC
 			;		------------------------------- RETRIEVE NUMBER -------------------------------
-			MOV		R8, #4
+			LDR		R8, [R3]					; Get value saved in memory
 			;		--------------------- PRIME NUMBER CONDITIONS VALIDATION ----------------------
 			CMP		R8, #1					; If its 1 or less
 			BLE		NOT_PRIME					; Then it is not prime
@@ -127,20 +132,33 @@ MODULO
 			BEQ		PRIME
 			SUB		R9, R9, R10
 			CMP		R9, #0
-			BGT		MODULO
+			BGE		MODULO
 			ADD		R11, R10, R9
 			CMP		R11, #0
 			BEQ		NOT_PRIME
 			MOV		PC, LR
 			;		----------------------------- FOR PRIME NUMBERS ------------------------------
 PRIME
-			MOV		R11, #0xE
-			B		ENCRYPT
+			MOV		R11, #1
+			STR		R11, [R12]
+			B		VALIDATE_CALC
 			;		--------------------------- FOR COMPOSITE NUMBERS ----------------------------
 NOT_PRIME
-			MOV		R11, #0xF
+			MOV		R11, #0
+			STR		R11, [R12]
+VALIDATE_CALC
+			;		===============================================================================
+			;		UPDATING AND EVALUATION OF STOP CONDITION
+			;		===============================================================================
+			;		------------------------------- UPDATE VARIABLES -------------------------------
+			ADD		R3, R3, #4				; Next address in memory reading
+			ADD		R12, R12, #4				; Next address in memory writing
+			SUB		R4, R4, #1				; Update the counter
+			;		-------------------------------- STOP CONDTION ---------------------------------
+			CMP		R4, #0					; If the counter is not zero yet
+			BNE		PRIME_CALC				; Repeat the process
+			END
 			
-ENCRYPT
 			
 			
 			
