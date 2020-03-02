@@ -7,6 +7,9 @@
 			;		Date: March 6, 2020
 			;		===============================================================================
 			
+			
+			
+			
 			;		===============================================================================
 			;		REGISTERS
 			;		===============================================================================
@@ -20,16 +23,21 @@
 			;		R5: Request address -> 0x300
 			;		R6: Request response address -> 0x304
 			;		R7: Operation codes -> 0xF0 for request and 0xFF for response
-			;		-------------------------------- PRIME NUMBERS --------------------------------
+			;		-------------------------- PRIME NUMBERS AND MODULO ---------------------------
 			;		Modulo is used as N % D = M
+			;		R1: Iteration variable [N:0] bits (in this case, 8 bits -> N = 7)
+			;		R2: R9 copy
 			;		R8: Primal analysis will be applied to this number
 			;		R9:
-			;		Divisible by 2: Flag that indicates if number is odd
-			;		Other cases: N
+			;		- Divisible by 2: Flag that indicates if number is odd
+			;		- Other cases: N
 			;		R10: D
 			;		R11: M and primality test result
 			;		R12: Number retrieving address
 			;		===============================================================================
+			
+			
+			
 			
 			;		================================================================================
 			;		LFSR (The bits that will be considered are the least significant ones)
@@ -53,6 +61,9 @@ LFSR
 			ADD		R0, R0, R2				; Generate new seed
 			;		===============================================================================
 			
+			
+			
+			
 			;		===============================================================================
 			;		SAVING, UPDATING AND EVALUATION OF STOP CONDITION
 			;		===============================================================================
@@ -65,6 +76,9 @@ LFSR
 			CMP		R4, #0					; If the counter is not zero yet
 			BNE		LFSR						; Repeat the process
 			;		===============================================================================
+			
+			
+			
 			
 			;		===============================================================================
 			;		COMPUTER INTERFACE
@@ -85,8 +99,12 @@ RESPONSE
 			BNE		RESPONSE					; If the code is not the expected, keeps waiting
 			;		===============================================================================
 			
+			
+			
+			
 			;		===============================================================================
 			;		PRIMALITY TEST
+			;		Only prime numbers below sqrt(256) = 16 are needed to confirm primality
 			;		===============================================================================
 			;		-------------------------------- INITIALIZATIONS -------------------------------
 			MOV		R3, #0x1200				; Number retrieving address initialization
@@ -126,31 +144,80 @@ PRIME_CALC
 			BL		MODULO					; Apply modulo operation
 			;		------------------------------------ ELSE -------------------------------------
 			B		PRIME					; Else, the number is prime
-			;		------------------------------ MODULO OPERATION -------------------------------
+			;		===============================================================================
+			
+			
+			
+			
+			;		===============================================================================
+			;		MODULO OPERATION (USING LONG DIVISION ALGORITHM)
+			;		===============================================================================
 MODULO
-			CMP		R8, R10
-			BEQ		PRIME
-			SUB		R9, R9, R10
-			CMP		R9, #0
-			BGE		MODULO
-			ADD		R11, R10, R9
-			CMP		R11, #0
-			BEQ		NOT_PRIME
-			MOV		PC, LR
+			;		--------------------- INITIAL VALIDATIONS AND DECLARATIONS --------------------
+			CMP		R8, R10					; If the number can only be divided by D
+			BEQ		PRIME					; Then it is prime
+			MOV		R1, #7					; 8 bit data iterator (i)
+			MOV		R11, #0					; M = 0
+MODULO_LOOP
+			LSL		R11, R11, #1				; M := M << 1
+			MOV		R2, R9					; Copy the value of N to operate it
+			LSR		R2, R2, R1				; Get number value at N
+			AND		R2, R2, #1				; Use only LSB
+			ADD		R11, R11, R2				; Set M LSB -> M[0] := N[i]
+			CMP		R11, R10					; If M < D
+			BLT		MODULO_REPEAT				; Verify if a new iteration is needed
+			SUB		R11, R11, R10				; M := M - D
+MODULO_REPEAT
+			SUB		R1, R1, #1				; i--
+			CMP		R1, #0					; If i >= 0
+			BGE		MODULO_LOOP				; Then repeat the modulo loop
+			CMP		R11, #0					; If modulo is 0
+			BEQ		NOT_PRIME					; Then, the number is not prime
+			MOV		PC, LR					; Else, try again with other divisor
+			;		===============================================================================
+			
+			
+			
+			
+			;		===============================================================================
+			;		MODULO OPERATION (USING REPEATED SUBTRACTION ALGORITHM)
+			;		===============================================================================
+			;MODULO
+			;CMP		R8, R10
+			;BEQ		PRIME
+			;SUB		R9, R9, R10
+			;CMP		R9, #0
+			;BGE		MODULO
+			;ADD		R11, R10, R9
+			;CMP		R11, #0
+			;BEQ		NOT_PRIME
+			;MOV		PC, LR
+			;		===============================================================================
+			
+			
+			
+			
+			;		===============================================================================
+			;		SET PRIMALITY RESULT
+			;		===============================================================================
 			;		----------------------------- FOR PRIME NUMBERS ------------------------------
 PRIME
-			MOV		R11, #1
-			STR		R11, [R12]
+			MOV		R11, #1					; Set prime flag: 1
 			B		VALIDATE_CALC
 			;		--------------------------- FOR COMPOSITE NUMBERS ----------------------------
 NOT_PRIME
-			MOV		R11, #0
-			STR		R11, [R12]
-VALIDATE_CALC
+			MOV		R11, #0					; Set prime flag: 1
 			;		===============================================================================
-			;		UPDATING AND EVALUATION OF STOP CONDITION
+			
+			
+			
+			
+			;		===============================================================================
+			;		SAVING, UPDATING AND EVALUATION OF STOP CONDITION
 			;		===============================================================================
 			;		------------------------------- UPDATE VARIABLES -------------------------------
+VALIDATE_CALC
+			STR		R11, [R12]				; Save the flag value in memory
 			ADD		R3, R3, #4				; Next address in memory reading
 			ADD		R12, R12, #4				; Next address in memory writing
 			SUB		R4, R4, #1				; Update the counter
@@ -158,7 +225,7 @@ VALIDATE_CALC
 			CMP		R4, #0					; If the counter is not zero yet
 			BNE		PRIME_CALC				; Repeat the process
 			END
-			
+			;		===============================================================================
 			
 			
 			
