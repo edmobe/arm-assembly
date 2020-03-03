@@ -1,7 +1,7 @@
 			;		===============================================================================
 			;		Tecnológico de Costa Rica
 			;		CE4301: Computer Architecture I
-			;		First Homework: Assembly programming in ARM
+			;		First Homework: Assembly programming in ARM (part 1)
 			;		Teacher: Luis Chavarría Zamora
 			;		Made by: Eduardo Moya Bello
 			;		Date: March 6, 2020
@@ -34,9 +34,6 @@
 			;		R10: D
 			;		R11: M and primality test result
 			;		R12: Number retrieving address
-			;		--------------------------------- ENCRYPTION ----------------------------------
-			;		R1: Current character of "Claude Shannon"
-			;		R2: 
 			;		===============================================================================
 			
 			
@@ -211,9 +208,3 @@ VALIDATE_CALC
 			BNE		PRIME_CALC				; Repeat the process
 			END
 			;		===============================================================================
-			
-			
-			
-			
-			
-			
