@@ -34,6 +34,9 @@
 			;		R10: D
 			;		R11: M and primality test result
 			;		R12: Number retrieving address
+			;		--------------------------------- ENCRYPTION ----------------------------------
+			;		R1: Current character of "Claude Shannon"
+			;		R2: 
 			;		===============================================================================
 			
 			
@@ -43,7 +46,7 @@
 			;		LFSR (The bits that will be considered are the least significant ones)
 			;		================================================================================
 			;		-------------------------------- INITIALIZATIONS -------------------------------
-			MOV		R3, #0x1200				; Number saving address initialization
+			MOV		R3, #0x500				; Number saving address initialization
 			MOV		R0, #121					; Seed initialization
 			MOV		R4, #20					; Counter initialization
 			;		------------------------------------- LFSR -------------------------------------
@@ -84,7 +87,7 @@ LFSR
 			;		COMPUTER INTERFACE
 			;		===============================================================================
 			;		-------------------------------- DECLARATIONS ---------------------------------
-			MOV		R5, #0x1300				; Request address initialization
+			MOV		R5, #0x600				; Request address initialization
 			ADD		R6, R5, #4				; Response address initialization
 			MOV		R7, #0xF0					; First a request must be made
 			;		-------------------------------- SEND REQUEST ---------------------------------
@@ -107,9 +110,9 @@ RESPONSE
 			;		Only prime numbers below sqrt(256) = 16 are needed to confirm primality
 			;		===============================================================================
 			;		-------------------------------- INITIALIZATIONS -------------------------------
-			MOV		R3, #0x1200				; Number retrieving address initialization
+			MOV		R3, #0x500				; Number retrieving address initialization
 			MOV		R4, #20					; Counter initialization
-			MOV		R12, #0x1400				; Number saving address initialization
+			MOV		R12, #0x700				; Number saving address initialization
 PRIME_CALC
 			;		------------------------------- RETRIEVE NUMBER -------------------------------
 			LDR		R8, [R3]					; Get value saved in memory
@@ -180,24 +183,6 @@ MODULO_REPEAT
 			
 			
 			;		===============================================================================
-			;		MODULO OPERATION (USING REPEATED SUBTRACTION ALGORITHM)
-			;		===============================================================================
-			;MODULO
-			;CMP		R8, R10
-			;BEQ		PRIME
-			;SUB		R9, R9, R10
-			;CMP		R9, #0
-			;BGE		MODULO
-			;ADD		R11, R10, R9
-			;CMP		R11, #0
-			;BEQ		NOT_PRIME
-			;MOV		PC, LR
-			;		===============================================================================
-			
-			
-			
-			
-			;		===============================================================================
 			;		SET PRIMALITY RESULT
 			;		===============================================================================
 			;		----------------------------- FOR PRIME NUMBERS ------------------------------
@@ -215,25 +200,17 @@ NOT_PRIME
 			;		===============================================================================
 			;		SAVING, UPDATING AND EVALUATION OF STOP CONDITION
 			;		===============================================================================
-			;		------------------------------- UPDATE VARIABLES -------------------------------
+			;		------------------------------- UPDATE VARIABLES ------------------------------
 VALIDATE_CALC
 			STR		R11, [R12]				; Save the flag value in memory
 			ADD		R3, R3, #4				; Next address in memory reading
 			ADD		R12, R12, #4				; Next address in memory writing
 			SUB		R4, R4, #1				; Update the counter
-			;		-------------------------------- STOP CONDTION ---------------------------------
+			;		-------------------------------- STOP CONDTION -------------------------------
 			CMP		R4, #0					; If the counter is not zero yet
 			BNE		PRIME_CALC				; Repeat the process
 			END
 			;		===============================================================================
-			
-			
-			
-			
-			
-			
-			
-			
 			
 			
 			
