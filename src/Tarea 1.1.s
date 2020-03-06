@@ -33,7 +33,7 @@
 			;		- Other cases: N
 			;		R10: D
 			;		R11: M and primality test result
-			;		R12: Number retrieving address
+			;		R12: Number lenght and number retrieving address
 			;		===============================================================================
 			
 			
@@ -46,6 +46,8 @@
 			MOV		R3, #0x500				; Number saving address initialization
 			MOV		R0, #121					; Seed initialization
 			MOV		R4, #20					; Counter initialization
+			MOV		R12, #0x620				; Number lenght saving address
+			STR		R4, [R12]					; Save number lenght
 			;		------------------------------------- LFSR -------------------------------------
 LFSR
 			MOV		R1, R0					; Initialize seed copy (XOR_IN_1) | LSB = BIT_8
